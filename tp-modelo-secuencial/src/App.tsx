@@ -35,7 +35,6 @@ function App() {
       epochs: 350,
       callbacks: {
         onEpochEnd: async (epoch) => {
-          // Actualizamos la UI para cumplir con el requerimiento del profesor
           setCurrentEpoch(epoch + 1);
         },
       },
@@ -56,14 +55,13 @@ function App() {
     const xValue = parseFloat(inputX);
     if (isNaN(xValue)) return;
 
-    // tf.tidy es una buena práctica: limpia automáticamente la memoria de los tensores intermedios
+    //buena práctica: limpia automáticamente la memoria de los tensores intermedios
     const result = tf.tidy(() => {
       const inputTensor = tf.tensor2d([xValue], [1, 1]);
       const outputTensor = modelRef.current!.predict(inputTensor) as tf.Tensor;
       return outputTensor.dataSync()[0];
     });
 
-    // Redondeamos a dos decimales para limpiar el ruido del cálculo flotante
     setPredictionResult(Math.round(result * 100) / 100);
   };
 
