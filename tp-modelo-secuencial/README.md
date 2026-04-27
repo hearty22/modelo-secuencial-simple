@@ -1,73 +1,42 @@
-# React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Currently, two official plugins are available:
+# TP: Entrenamiento de Modelo Secuencial con TensorFlow.js
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Descripcion
+Este proyecto consiste en la implementacion de una red neuronal artificial simple (Regresion Lineal) entrenada desde cero en el navegador. El objetivo es que el modelo aprenda la relacion matematica detras de una funcion lineal especifica mediante el ajuste de pesos y sesgos a lo largo de un proceso de entrenamiento iterativo.
 
-## React Compiler
+## Especificaciones Tecnicas
+* Formula Objetivo: y = 2x + 6
+* Arquitectura: Modelo secuencial con una unica capa densa (1 neurona).
+* Optimizador: Stochastic Gradient Descent (SGD).
+* Funcion de Perdida: Mean Squared Error (MSE).
+* Dataset de Entrenamiento:
+  * Entradas (X): Tensores de forma [9, 1] iniciando en -6 con incremento unitario.
+  * Etiquetas (Y): Valores calculados mediante la funcion objetivo correspondientes a cada X.
+* Ciclos de Entrenamiento: 350 epocas (Epochs).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tecnologias Utilizadas
+* React (Vite)
+* TypeScript
+* TensorFlow.js (@tensorflow/tfjs)
 
-## Expanding the ESLint configuration
+## Caracteristicas de la Implementacion
+* Feedback en tiempo real: El sistema utiliza callbacks (onEpochEnd) para informar al usuario el progreso exacto del entrenamiento.
+* Gestion de Memoria: Uso de tf.tidy() para la limpieza automatica de tensores durante la fase de prediccion, evitando fugas de memoria en el hardware grafico (GPU/WebGL).
+* Arquitectura Desacoplada: El modelo se mantiene en una referencia (useRef) para persistir la red entrenada sin causar re-renderizados innecesarios del DOM.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Instalacion y Ejecucion
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. Clonar el repositorio o descargar los archivos.
+2. Instalar dependencias:
+   ```bash
+   npm install
+   ```
+3. Iniciar el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
+4. Acceder a la aplicacion y presionar el boton "Iniciar Entrenamiento" para generar los pesos del modelo antes de realizar predicciones.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Ejemplo de Uso
+Una vez finalizadas las 350 epocas, si se ingresa un valor X = 10, el modelo deberia predecir un valor Y cercano a 26, demostrando que la red neuronal ha inferido correctamente la logica de la ecuacion lineal.
