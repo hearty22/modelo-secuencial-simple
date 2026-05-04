@@ -1,46 +1,62 @@
 import { useState, useRef } from "react";
 import * as tf from "@tensorflow/tfjs";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 function App() {
-  // Estados para la UI
   const [isTraining, setIsTraining] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [currentEpoch, setCurrentEpoch] = useState(0);
+  const [lossHistory, setLossHistory] = useState<number[]>([]);
 
-  // Estados para los datos del usuario
   const [inputX, setInputX] = useState<string>("");
   const [predictionResult, setPredictionResult] = useState<number | null>(null);
 
-  // Guardamos la instancia del modelo compilado fuera del ciclo de renderizado
   const modelRef = useRef<tf.Sequential | null>(null);
 
   const trainModel = async () => {
     setIsTraining(true);
     setIsReady(false);
     setPredictionResult(null);
+    setLossHistory([]);
 
-    // 1. Arquitectura: Un modelo secuencial con una sola capa densa (1 neurona, 1 entrada)
     const model = tf.sequential();
     model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
 
-    // 2. Compilación: Optimizador SGD y error cuadrático medio
     model.compile({ loss: "meanSquaredError", optimizer: "sgd" });
 
-    // 3. Dataset: Fórmula y = 2x + 6 (desde x = -6, 9 muestras)
     const xs = tf.tensor2d([-6, -5, -4, -3, -2, -1, 0, 1, 2], [9, 1]);
     const ys = tf.tensor2d([-6, -4, -2, 0, 2, 4, 6, 8, 10], [9, 1]);
 
-    // 4. Entrenamiento asíncrono
     await model.fit(xs, ys, {
-      epochs: 350,
+      epochs: 600,
       callbacks: {
-        onEpochEnd: async (epoch) => {
+        onEpochEnd: async (epoch, logs) => {
           setCurrentEpoch(epoch + 1);
+          setLossHistory((prev) => [...prev, logs.loss]);
         },
       },
     });
 
-    // Guardamos el modelo y limpiamos los tensores de entrenamiento de la RAM
     modelRef.current = model;
     xs.dispose();
     ys.dispose();
@@ -55,7 +71,6 @@ function App() {
     const xValue = parseFloat(inputX);
     if (isNaN(xValue)) return;
 
-    //buena práctica: limpia automáticamente la memoria de los tensores intermedios
     const result = tf.tidy(() => {
       const inputTensor = tf.tensor2d([xValue], [1, 1]);
       const outputTensor = modelRef.current!.predict(inputTensor) as tf.Tensor;
@@ -63,6 +78,32 @@ function App() {
     });
 
     setPredictionResult(Math.round(result * 100) / 100);
+  };
+
+  const chartData = {
+    labels: lossHistory.map((_, index) => index + 1),
+    datasets: [
+      {
+        label: "Pérdida (Loss)",
+        data: lossHistory,
+        borderColor: "rgb(255, 99, 132)",
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
+        tension: 0.1,
+        pointRadius: 0,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: "top" as const },
+      title: { display: true, text: "Evolución de la Función de Pérdida" },
+    },
+    scales: {
+      x: { title: { display: true, text: "Épocas" } },
+      y: { title: { display: true, text: "Loss" } },
+    },
   };
 
   return (
@@ -106,7 +147,7 @@ function App() {
             }}
           >
             {isTraining
-              ? `Entrenando... Época ${currentEpoch} / 350`
+              ? `Entrenando... Época ${currentEpoch} / 600`
               : "Iniciar Entrenamiento"}
           </button>
 
@@ -128,6 +169,21 @@ function App() {
           )}
         </div>
       </section>
+
+      {(isTraining || isReady) && (
+        <section
+          style={{
+            marginBottom: "30px",
+            padding: "20px",
+            backgroundColor: "#fff",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+        >
+          <Line data={chartData} options={chartOptions} />
+        </section>
+      )}
 
       {isReady && (
         <section
